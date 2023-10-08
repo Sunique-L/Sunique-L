@@ -1,0 +1,2 @@
+# minote_class7
+
