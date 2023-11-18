@@ -27,39 +27,56 @@ import android.database.Cursor;
 import net.micode.notes.data.Notes;
 import net.micode.notes.data.Notes.NoteColumns;
 
+/*这个广播接收器的主要功能是设置一个闹钟，
+闹钟在每条笔记的 NoteColumns.ALERTED_DATE 到达时触发，并通过广播将笔记的 ID 发送给 AlarmReceiver 类进行处理。*/
 
-public class AlarmInitReceiver extends BroadcastReceiver {
-
-    private static final String [] PROJECTION = new String [] {
-        NoteColumns.ID,
-        NoteColumns.ALERTED_DATE
-    };
-
-    private static final int COLUMN_ID                = 0;
-    private static final int COLUMN_ALERTED_DATE      = 1;
-
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        long currentDate = System.currentTimeMillis();
-        Cursor c = context.getContentResolver().query(Notes.CONTENT_NOTE_URI,
-                PROJECTION,
-                NoteColumns.ALERTED_DATE + ">? AND " + NoteColumns.TYPE + "=" + Notes.TYPE_NOTE,
-                new String[] { String.valueOf(currentDate) },
-                null);
-
-        if (c != null) {
-            if (c.moveToFirst()) {
-                do {
-                    long alertDate = c.getLong(COLUMN_ALERTED_DATE);
-                    Intent sender = new Intent(context, AlarmReceiver.class);
-                    sender.setData(ContentUris.withAppendedId(Notes.CONTENT_NOTE_URI, c.getLong(COLUMN_ID)));
-                    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, sender, 0);
-                    AlarmManager alermManager = (AlarmManager) context
-                            .getSystemService(Context.ALARM_SERVICE);
-                    alermManager.set(AlarmManager.RTC_WAKEUP, alertDate, pendingIntent);
-                } while (c.moveToNext());
-            }
-            c.close();
-        }
-    }
+// 定义一个名为 AlarmInitReceiver 的公共类，该类继承自 BroadcastReceiver 类  
+public class AlarmInitReceiver extends BroadcastReceiver {  
+  
+    // 定义一个静态的字符串数组，其中包含两个字符串元素：ID 和 AlteredDate  
+    private static final String [] PROJECTION = new String [] {  
+        NoteColumns.ID,  
+        NoteColumns.ALERTED_DATE  
+    };  
+  
+    // 定义两个静态整数常量，用于在后续代码中作为索引使用，分别为 PROJECTION 数组中的 ID 和 AlteredDate 元素的索引  
+    private static final int COLUMN_ID                = 0;  
+    private static final int COLUMN_ALERTED_DATE      = 1;  
+  
+    // 重写 BroadcastReceiver 类的 onReceive 方法，该方法在接收到 Intent 时被调用  
+    @Override  
+    public void onReceive(Context context, Intent intent) {  
+        // 获取当前的系统时间，以毫秒为单位  
+        long currentDate = System.currentTimeMillis();  
+        // 使用当前 Context 和定义的 projection 对数据进行查询，查询条件为：AlteredDate 大于当前时间（currentDate）并且 Type 等于 NOTE_TYPE  
+        Cursor c = context.getContentResolver().query(Notes.CONTENT_NOTE_URI,  
+                PROJECTION,  
+                NoteColumns.ALERTED_DATE + ">? AND " + NoteColumns.TYPE + "=" + Notes.TYPE_NOTE,  
+                new String[] { String.valueOf(currentDate) },  
+                null);  
+  
+        // 检查查询结果是否为空，如果不为空则进行后续操作  
+        if (c != null) {  
+            // 将查询结果移动到第一条数据，如果存在的话  
+            if (c.moveToFirst()) {  
+                // 进行循环操作，直到遍历完所有的查询结果  
+                do {  
+                    // 获取查询结果中 AlteredDate 字段的值  
+                    long alertDate = c.getLong(COLUMN_ALERTED_DATE);  
+                    // 创建一个新的 Intent，目标为 AlarmReceiver 类  
+                    Intent sender = new Intent(context, AlarmReceiver.class);  
+                    // 将查询结果中 Id 字段的值设置为 Intent 的数据，以便在 AlarmReceiver 中使用  
+                    sender.setData(ContentUris.withAppendedId(Notes.CONTENT_NOTE_URI, c.getLong(COLUMN_ID)));  
+                    // 创建一个新的 PendingIntent，用于稍后执行，并且目标为当前的 Intent 和广播类型  
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, sender, 0);  
+                    // 从 Context 中获取系统的 AlarmManager 服务  
+                    AlarmManager alermManager = (AlarmManager) context  
+                            .getSystemService(Context.ALARM_SERVICE);  
+                    // 使用 AlarmManager 设置一个新的闹钟，在 alertDate 时间触发，使用上面创建的 PendingIntent 来发送广播唤醒应用  
+                    alermManager.set(AlarmManager.RTC_WAKEUP, alertDate, pendingIntent);  
+                } while (c.moveToNext());  // 移动到下一条数据，如果存在的话，重复上述操作直到遍历完所有数据。  
+            }  
+            c.close();  // 关闭查询结果集。  
+        }  
+    }  
 }
