@@ -23,7 +23,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import net.micode.notes.data.Notes.DataColumns;
-import net.micode.notes.data.Notes.DataConstants;
+import net.micode.notes.data.Notes.DataConstants;//
 import net.micode.notes.data.Notes.NoteColumns;
 
 
